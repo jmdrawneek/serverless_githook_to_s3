@@ -11,9 +11,8 @@ module.exports = class DeploymentTools {
     this.bucketName = bucketName;
 
     let replacePath = (typeof path !== 'undefined') ? path : '';
-    console.log(event);
 
-    this.uri = event.repository.contents_url.replace('{+path}', replacePath);
+    this.uri = event.body.payload.repository.contents_url.replace('{+path}', replacePath);
     this.path = path;
     this.s3 = new AWS.S3({
       params: {
@@ -32,6 +31,7 @@ module.exports = class DeploymentTools {
 
       if (typeof this.token !== 'string') {
         errMsg = 'Must provide a \'GITHUB_WEBHOOK_SECRET\' env variable';
+        console.log(errMsg);
         return callback(null, {
           statusCode: 401,
           headers: { 'Content-Type': 'text/plain' },
@@ -41,6 +41,7 @@ module.exports = class DeploymentTools {
 
       if (!sig) {
         errMsg = 'No X-Hub-Signature found on request';
+        console.log(errMsg);
         return callback(null, {
           statusCode: 401,
           headers: { 'Content-Type': 'text/plain' },
@@ -50,6 +51,7 @@ module.exports = class DeploymentTools {
 
       if (!githubEvent) {
         errMsg = 'No X-Github-Event found on request';
+        console.log(errMsg);
         return callback(null, {
           statusCode: 422,
           headers: { 'Content-Type': 'text/plain' },
@@ -59,6 +61,7 @@ module.exports = class DeploymentTools {
 
       if (!id) {
         errMsg = 'No X-Github-Delivery found on request';
+        console.log(errMsg);
         return callback(null, {
           statusCode: 401,
           headers: { 'Content-Type': 'text/plain' },
@@ -68,6 +71,7 @@ module.exports = class DeploymentTools {
 
       if (sig !== calculatedSig) {
         errMsg = 'X-Hub-Signature incorrect. Github webhook token doesn\'t match';
+        console.log(errMsg);
         return callback(null, {
           statusCode: 401,
           headers: { 'Content-Type': 'text/plain' },
