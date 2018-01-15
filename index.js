@@ -11,8 +11,9 @@ module.exports = class DeploymentTools {
     this.bucketName = bucketName;
 
     let replacePath = (typeof path !== 'undefined') ? path : '';
+    console.log(event);
 
-    this.uri = event.payload.repository.contents_url.replace('{+path}', replacePath);
+    this.uri = event.repository.contents_url.replace('{+path}', replacePath);
     this.path = path;
     this.s3 = new AWS.S3({
       params: {
