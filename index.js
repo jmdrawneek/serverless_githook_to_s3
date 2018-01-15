@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const request = require('request');
 const AWS = require('aws-sdk');
 
 module.exports = class DeploymentTools {
@@ -117,7 +118,6 @@ module.exports = class DeploymentTools {
       if (error) {
         this.callback(error, `Fetching the resources from: ${downloadsUrl} failed.`);
       }
-
 
       console.log(JSON.parse(body));
       dsfsdfsf;
