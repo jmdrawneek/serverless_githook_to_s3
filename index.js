@@ -12,7 +12,9 @@ module.exports = class DeploymentTools {
 
     let replacePath = (typeof path !== 'undefined') ? path : '';
 
-    this.uri = event.body.payload.repository.contents_url.replace('{+path}', replacePath);
+    console.log(event);
+
+    this.uri = event.payload.repository.contents_url.replace('{+path}', replacePath);
     this.path = path;
     this.s3 = new AWS.S3({
       params: {
@@ -131,14 +133,58 @@ module.exports = class DeploymentTools {
       return new Promise((resolve, reject) => {
 
         JSON.parse(body).forEach((fileObject, index) => {
-          putFileToS3(fileObject, folder)
-          .catch((error) => this.callback(error, `Error while uploading ${fileObject.name} file to S3`))
-          .then(() => {
-          });
+          this.files.push(fileObject)
         })
       })
 
 
     });
   }
+
+  putFilesOnS3() {
+    return new Promise((resolve, reject) => {
+      // fileObject, folder
+      this.files.forEach((fileObject, index) => {
+        request(fileObject.download_url)
+        .pipe(fs.createWriteStream(`/tmp/${fileObject.name}`))
+        .on('finish', () => {
+          this.s3.upload({
+            Bucket: bucketName,
+            Key: folder + fileObject.name,
+            Body: fs.createReadStream(`/tmp/${fileObject.name}`),
+            ACL: 'public-read',
+            CacheControl: 'max-age=31536000',
+            ContentType: this.computeContentType(fileObject.name)
+          }, (error) => {
+            if (error) {
+              throw new Error('Error connecting to s3 bucket. ' + error);
+            }
+            else return resolve();
+          });
+        });
+      })
+
+    })
+  }
+
+  computeContentType (filename) {
+    const parts = filename.split('.');
+    console.log(filename.split('.')[parts.length - 1]);
+    switch (filename.split('.')[parts.length - 1]) {
+    case 'png':
+    return "image/png";
+    case 'gif':
+    return "image/gif";
+    case 'html':
+    return "text/html";
+    case 'js':
+    return "application/javascript";
+    case 'css':
+    return "text/css";
+    case 'sass':
+    return "text/css";
+    case 'svg':
+    return "image/svg+xml";
+  }
+}
 }
