@@ -9,12 +9,11 @@ module.exports = class DeploymentTools {
     this.event = event;
     this.callback = callback;
     this.bucketName = bucketName;
+    this.payload = JSON.parse(event.body.payload);
 
     let replacePath = (typeof path !== 'undefined') ? path : '';
 
-    console.log(event.body.payload.repository.contents_url);
-
-    this.uri = event.body.payload.repository.contents_url.replace('{+path}', replacePath);
+    this.uri = this.payload.repository.contents_url.replace('{+path}', replacePath);
     this.path = path;
     this.s3 = new AWS.S3({
       params: {
