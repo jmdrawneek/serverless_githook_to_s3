@@ -28,7 +28,7 @@ module.exports = class DeploymentTools {
       const sig = headers['X-Hub-Signature'];
       const githubEvent = headers['X-GitHub-Event'];
       const id = headers['X-GitHub-Delivery'];
-      const calculatedSig = this.signRequestBody(this.token, this.event.body.toString());
+      const calculatedSig = this.signRequestBody(this.token, this.event.body);
 
       if (typeof this.token !== 'string') {
         errMsg = 'Must provide a \'GITHUB_WEBHOOK_SECRET\' env variable';
@@ -101,15 +101,13 @@ module.exports = class DeploymentTools {
         };
 
         return this.callback(null, response);
-      })
-
-
-
-
+      });
     }
 
   signRequestBody(key, body) {
-    return `sha1=${crypto.createHmac('sha1', key).update(body, 'utf-8').digest('hex')}`;
+    let hmac = crypto.createHmac("sha1", key);
+    hmac.update(body, "utf-8");
+    return "sha1=" + hmac.digest("hex");
   }
 
   getFilesFromGit(downloadsUrl) {
