@@ -9,11 +9,10 @@ module.exports = class DeploymentTools {
     this.event = event;
     this.callback = callback;
     this.bucketName = bucketName;
-    this.payload = JSON.parse(event.body.payload);
 
     let replacePath = (typeof path !== 'undefined') ? path : '';
 
-    this.uri = this.payload.repository.contents_url.replace('{+path}', replacePath);
+    this.uri = event.body.repository.contents_url.replace('{+path}', replacePath);
     this.path = path;
     this.s3 = new AWS.S3({
       params: {
@@ -88,11 +87,11 @@ module.exports = class DeploymentTools {
       /* eslint-enable */
 
 
-      return this.getFilesFromGit(this.uri)
-      .then(() => {
+      const filedAdded = this.getFilesFromGit(this.uri);
+      console.log(`${filedAdded} x files added.`);
 
-      })
-        .then(() => {
+      console.log(this.files);
+
         const response = {
           statusCode: 200,
           body: JSON.stringify({
@@ -101,12 +100,11 @@ module.exports = class DeploymentTools {
         };
 
         return this.callback(null, response);
-      });
     }
 
   signRequestBody(key, body) {
     let hmac = crypto.createHmac("sha1", key);
-    hmac.update(body, "utf-8");
+    hmac.update(JSON.stringify(body), "utf-8");
     return "sha1=" + hmac.digest("hex");
   }
 
@@ -117,21 +115,23 @@ module.exports = class DeploymentTools {
         'User-Agent': 'AWS Lambda Function' // Without that Github will reject all requests
       }
     }
+    return new Promise((resolve, reject) => {
 
-    return request(target, (error, response, body) => {
+      request(target, (error, response, body) => {
       if (error) {
         this.callback(error, `Fetching the resources from: ${downloadsUrl} failed.`);
       }
 
-      console.log(JSON.parse(body));
-      dsfsdfsf;
+      const body = JSON.parse(body);
+      console.log(body);
 
+        body.forEach((fileObject, index) => {
+          this.files.push(fileObject);
 
-      return new Promise((resolve, reject) => {
-
-        JSON.parse(body).forEach((fileObject, index) => {
-          this.files.push(fileObject)
-        })
+          if (index === body.length - 1) {
+            resolve(index);
+          }
+        });
       })
 
 
