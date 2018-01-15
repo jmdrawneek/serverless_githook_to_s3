@@ -122,13 +122,13 @@ module.exports = class DeploymentTools {
         this.callback(error, `Fetching the resources from: ${downloadsUrl} failed.`);
       }
 
-      const body = JSON.parse(body);
-      console.log(body);
+      const bodyObj = JSON.parse(body);
+      console.log(bodyObj);
 
-        body.forEach((fileObject, index) => {
+        bodyObj.forEach((fileObject, index) => {
           this.files.push(fileObject);
 
-          if (index === body.length - 1) {
+          if (index === bodyObj.length - 1) {
             resolve(index);
           }
         });
