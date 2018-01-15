@@ -3,9 +3,9 @@ const request = require('request');
 const AWS = require('aws-sdk');
 
 module.exports = class DeploymentTools {
-  constructor (credentials, event, callback, bucketName, path) {
+  constructor (credentials, event, callback, bucketName, gitHookKey, path) {
     this.credentials = credentials;
-    this.token = process.env.GITHUB_WEBHOOK_SECRET;
+    this.token = gitHookKey;
     this.event = event;
     this.callback = callback;
     this.bucketName = bucketName;
