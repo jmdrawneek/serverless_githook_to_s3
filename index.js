@@ -24,7 +24,7 @@ module.exports = class DeploymentTools {
 
   processIncommingGitHook() {
       let errMsg = null;
-      const headers = event.headers;
+      const headers = this.event.headers;
       const sig = headers['X-Hub-Signature'];
       const githubEvent = headers['X-GitHub-Event'];
       const id = headers['X-GitHub-Delivery'];
@@ -84,7 +84,7 @@ module.exports = class DeploymentTools {
       console.log('---------------------------------');
       console.log(`Github-Event: "${githubEvent}" with action: "${this.event.body.action}"`);
       console.log('---------------------------------');
-      console.log('Payload', event.body);
+      console.log('Payload', this.event.body);
       /* eslint-enable */
 
 
