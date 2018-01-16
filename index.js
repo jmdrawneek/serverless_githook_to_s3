@@ -3,9 +3,10 @@ const request = require('request');
 const AWS = require('aws-sdk');
 
 module.exports = class DeploymentTools {
-  constructor (credentials, event, callback, bucketName, gitHookKey, path) {
+  constructor (credentials, event, callback, bucketName, gitHookKey, gitAPIkey, path) {
     this.credentials = credentials;
     this.token = gitHookKey;
+    this.gitAPIkey = gitAPIkey;
     this.event = event;
     this.callback = callback;
     this.bucketName = bucketName;
@@ -21,6 +22,11 @@ module.exports = class DeploymentTools {
     });
   }
 
+  /**
+   * Takes the event setup in the constructor error handles and authenticates.
+   *
+   * @returns {Promise}
+   */
   processIncommingGitHook() {
     let errMsg = null;
     const headers = this.event.headers;
@@ -90,12 +96,25 @@ module.exports = class DeploymentTools {
     return this.getFilesFromGit(this.uri);
   }
 
+  /**
+   * Create a sha1 from the body to compare with the sha1 in the head to make sure
+   * this event is legit.
+   *
+   * @param key {string} api key
+   * @param body {object} raw event payload
+   * @returns {string}
+   */
   signRequestBody(key, body) {
     let hmac = crypto.createHmac("sha1", key);
     hmac.update(JSON.stringify(body), "utf-8");
     return "sha1=" + hmac.digest("hex");
   }
 
+  /**
+   *
+   * @param downloadsUrl
+   * @returns {Promise<any>}
+   */
   getFilesFromGit(downloadsUrl) {
     const target = {
       uri: downloadsUrl,
@@ -105,7 +124,7 @@ module.exports = class DeploymentTools {
     }
     return new Promise((resolve, reject) => {
 
-      request(target, (error, response, body) => {
+      const requestCallback = (error, response, body) => {
         if (error) {
           this.callback(error, `Fetching the resources from: ${downloadsUrl} failed.`);
         }
@@ -120,7 +139,16 @@ module.exports = class DeploymentTools {
             resolve(index);
           }
         });
+      }
+
+      request
+      .get(target, requestCallback)
+      .auth(null, null, true, this.gitAPIkey)
+      .on('response', function(response) {
+        console.log(response.statusCode) // 200
+        console.log(response.headers['content-type']) // 'image/png'
       })
+
     });
   }
 
