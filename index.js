@@ -11,9 +11,13 @@ module.exports = class DeploymentTools {
     this.callback = callback;
     this.bucketName = bucketName;
 
-    let replacePath = (typeof path !== 'undefined') ? path : '';
+    let replacePath = (typeof path === 'string') ? path : '';
 
     this.uri = event.body.repository.contents_url.replace('{+path}', replacePath);
+
+    this.owner = event.body.repository.full_name.split('/')[0];
+    this.repo = event.body.repository.full_name.split('/')[1];
+
     this.path = path;
     this.s3 = new AWS.S3({
       params: {
@@ -92,7 +96,6 @@ module.exports = class DeploymentTools {
     console.log('Payload', this.event.body);
     /* eslint-enable */
 
-
     return this.getFilesFromGit(this.uri);
   }
 
@@ -108,6 +111,34 @@ module.exports = class DeploymentTools {
     let hmac = crypto.createHmac("sha1", key);
     hmac.update(JSON.stringify(body), "utf-8");
     return "sha1=" + hmac.digest("hex");
+  }
+
+  listGitRepoBranches() {
+
+    const target = {
+      uri: `/repos/${this.owner}/${this.repo}/branches`,
+      headers: {
+        'User-Agent': 'AWS Lambda Function' // Without that Github will reject all requests
+      }
+    }
+
+    const requestCallback = (error, response, body) => {
+      if (error) {
+        this.callback(error, `Fetching the branch lists from: ${repo} failed.`);
+      }
+    }
+
+
+    return new Promise((resolve, reject) => {
+      request
+      .get(target, requestCallback)
+      .auth(null, null, true, this.gitAPIkey)
+      .on('response', function(response) {
+        console.log(response.statusCode) // 200
+        console.log(response.headers['content-type']) // 'image/png'
+      })
+
+    })
   }
 
   /**
