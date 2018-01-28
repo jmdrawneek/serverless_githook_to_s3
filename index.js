@@ -19,6 +19,7 @@ module.exports = class DeploymentTools {
     let replacePath = typeof path === 'string' ? path : '';
 
     this.uri = event.body.repository.contents_url.replace('{+path}', replacePath);
+    this.lastCommit = event.body.head_commit.id;
 
     this.owner = event.body.repository.full_name.split('/')[0];
     this.repo = event.body.repository.full_name.split('/')[1];
@@ -118,7 +119,7 @@ module.exports = class DeploymentTools {
     return "sha1=" + hmac.digest("hex");
   }
 
-  listGitRepoBranches() {
+  listGitRepoBranches(type) {
 
     const target = {
       uri: `https://api.github.com/repos/${this.owner}/${this.repo}/branches`,
@@ -131,8 +132,14 @@ module.exports = class DeploymentTools {
       if (error) {
         this.callback(error, `Fetching the branch lists from: ${this.repo} failed.`);
       }
-      console.log('reponse', response);
-      console.log('body', body);
+
+      switch (type) {
+        case 'get deployed':
+          const branchObj = body.filter(item => item.commit.sha === this.lastCommit);
+          return branchObj.name;
+        default:
+          return body;
+      }
     };
 
     return new Promise((resolve, reject) => {
@@ -148,7 +155,8 @@ module.exports = class DeploymentTools {
    * @param downloadsUrl
    * @returns {Promise<any>}
    */
-  getFilesFromGit(downloadsUrl) {
+  getFilesFromGit(branchName) {
+    const downloadsUrl = typeof branchName === 'undefined' ? this.uri : this.uri + '?ref=' + branchName;
     const target = {
       uri: downloadsUrl,
       headers: {

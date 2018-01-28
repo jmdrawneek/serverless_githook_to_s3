@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "babel": "babel index-raw.js --watch --out-file index.js"
+    "babel": "babel index-raw.js --out-file index.js"
   },
   "repository": {
     "type": "git",
