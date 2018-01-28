@@ -12,6 +12,7 @@ module.exports = class DeploymentTools {
     this.bucketName = bucketName;
 
     let replacePath = (typeof path === 'string') ? path : '';
+    console.log('Event body: ', event.body);
 
     this.uri = event.body.repository.contents_url.replace('{+path}', replacePath);
     this.lastCommit = event.body.head_commit.id;
