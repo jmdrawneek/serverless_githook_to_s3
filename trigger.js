@@ -5,19 +5,21 @@ exports.handler = (event, context, callback) => {
   const gitHookKey = process.env.GITHUB_WEBHOOK_SECRET;
   const gitAPIkey = process.env.GITHUB_API_TOKEN;
 
-  const deploymentTools = new DeploymentTools(null, event, callback, bucketName, gitHookKey, 'docs');
+  const deploymentTools = new DeploymentTools(null, event, callback, bucketName, gitHookKey, gitAPIkey, 'docs');
 
   // Process incoming gitHook event.
-  deploymentTools.processIncommingGitHook()
-  .then(files => {
-    console.log(`${files} added ready for deployment`);
+  if(deploymentTools.processIncommingGitHook()) {
+    async function task  () {
 
-    deploymentTools.listGitRepoBranches();
+      console.log(`${files} added ready for deployment`);
 
-    deploymentTools.putFilesOnS3(gitAPIkey)
-    .then(() => {
+      const branchName = await deploymentTools.listGitRepoBranches('get deployed');
+
+      await deploymentTools.getFilesFromGit(branchName)
+
+      await deploymentTools.putFilesOnS3()
+
       deploymentTools.closeTask();
-    });
-
-  });
+    }
+  }
 };

@@ -1,14 +1,9 @@
-/**
- * NOTE: This code is transpiled from ES2017 using Babel.
- * Instead of modifying this file directly, work with the source code instead and upload the transpiled output here.
- */'use strict';
-
 const crypto = require('crypto');
 const request = require('request');
 const AWS = require('aws-sdk');
 
 module.exports = class DeploymentTools {
-  constructor(credentials, event, callback, bucketName, gitHookKey, gitAPIkey, path) {
+  constructor (credentials, event, callback, bucketName, gitHookKey, gitAPIkey, path) {
     this.credentials = credentials;
     this.token = gitHookKey;
     this.gitAPIkey = gitAPIkey;
@@ -16,9 +11,10 @@ module.exports = class DeploymentTools {
     this.callback = callback;
     this.bucketName = bucketName;
 
-    let replacePath = typeof path === 'string' ? path : '';
+    let replacePath = (typeof path === 'string') ? path : '';
 
     this.uri = event.body.repository.contents_url.replace('{+path}', replacePath);
+    this.lastCommit = event.body.head_commit.id;
 
     this.owner = event.body.repository.full_name.split('/')[0];
     this.repo = event.body.repository.full_name.split('/')[1];
@@ -50,7 +46,7 @@ module.exports = class DeploymentTools {
       return callback(null, {
         statusCode: 401,
         headers: { 'Content-Type': 'text/plain' },
-        body: errMsg
+        body: errMsg,
       });
     }
 
@@ -60,7 +56,7 @@ module.exports = class DeploymentTools {
       return callback(null, {
         statusCode: 401,
         headers: { 'Content-Type': 'text/plain' },
-        body: errMsg
+        body: errMsg,
       });
     }
 
@@ -70,7 +66,7 @@ module.exports = class DeploymentTools {
       return callback(null, {
         statusCode: 422,
         headers: { 'Content-Type': 'text/plain' },
-        body: errMsg
+        body: errMsg,
       });
     }
 
@@ -80,7 +76,7 @@ module.exports = class DeploymentTools {
       return callback(null, {
         statusCode: 401,
         headers: { 'Content-Type': 'text/plain' },
-        body: errMsg
+        body: errMsg,
       });
     }
 
@@ -90,7 +86,7 @@ module.exports = class DeploymentTools {
       return callback(null, {
         statusCode: 401,
         headers: { 'Content-Type': 'text/plain' },
-        body: errMsg
+        body: errMsg,
       });
     }
 
@@ -118,29 +114,38 @@ module.exports = class DeploymentTools {
     return "sha1=" + hmac.digest("hex");
   }
 
-  listGitRepoBranches() {
+  listGitRepoBranches(type) {
 
     const target = {
       uri: `https://api.github.com/repos/${this.owner}/${this.repo}/branches`,
       headers: {
         'User-Agent': 'AWS Lambda Function' // Without that Github will reject all requests
       }
-    };
+    }
 
     const requestCallback = (error, response, body) => {
       if (error) {
         this.callback(error, `Fetching the branch lists from: ${this.repo} failed.`);
       }
-      console.log('reponse', response);
-      console.log('body', body);
-    };
+
+      switch (type) {
+        case 'get deployed':
+          const branchObj = body.filter(item => item.commit.sha === this.lastCommit);
+          return branchObj.name;
+        default:
+          return body;
+      }
+    }
 
     return new Promise((resolve, reject) => {
-      request.get(target, requestCallback).auth(null, null, true, this.gitAPIkey).on('response', function (response) {
-        console.log(response.statusCode); // 200
-        console.log(response.headers['content-type']); // 'image/png'
-      });
-    });
+      request
+      .get(target, requestCallback)
+      .auth(null, null, true, this.gitAPIkey)
+      .on('response', function(response) {
+        console.log(response.statusCode) // 200
+        console.log(response.headers['content-type']) // 'image/png'
+      })
+    })
   }
 
   /**
@@ -148,13 +153,14 @@ module.exports = class DeploymentTools {
    * @param downloadsUrl
    * @returns {Promise<any>}
    */
-  getFilesFromGit(downloadsUrl) {
+  getFilesFromGit(branchName) {
+    const downloadsUrl = typeof branchName === 'undefined' ? this.uri : this.uri + '?ref=' + branchName;
     const target = {
       uri: downloadsUrl,
       headers: {
         'User-Agent': 'AWS Lambda Function' // Without that Github will reject all requests
       }
-    };
+    }
     return new Promise((resolve, reject) => {
 
       const requestCallback = (error, response, body) => {
@@ -172,12 +178,16 @@ module.exports = class DeploymentTools {
             resolve(index);
           }
         });
-      };
+      }
 
-      request.get(target, requestCallback).auth(null, null, true, this.gitAPIkey).on('response', function (response) {
-        console.log(response.statusCode); // 200
-        console.log(response.headers['content-type']); // 'image/png'
-      });
+      request
+      .get(target, requestCallback)
+      .auth(null, null, true, this.gitAPIkey)
+      .on('response', function(response) {
+        console.log(response.statusCode) // 200
+        console.log(response.headers['content-type']) // 'image/png'
+      })
+
     });
   }
 
@@ -185,7 +195,9 @@ module.exports = class DeploymentTools {
     return new Promise((resolve, reject) => {
       // fileObject, folder
       this.files.forEach((fileObject, index) => {
-        request(fileObject.download_url).pipe(fs.createWriteStream(`/tmp/${fileObject.name}`)).on('finish', () => {
+        request(fileObject.download_url)
+        .pipe(fs.createWriteStream(`/tmp/${fileObject.name}`))
+        .on('finish', () => {
           this.s3.upload({
             Bucket: bucketName,
             Key: folder + fileObject.name,
@@ -193,17 +205,19 @@ module.exports = class DeploymentTools {
             ACL: 'public-read',
             CacheControl: 'max-age=31536000',
             ContentType: this.computeContentType(fileObject.name)
-          }, error => {
+          }, (error) => {
             if (error) {
               throw new Error('Error connecting to s3 bucket. ' + error);
-            } else return resolve();
+            }
+            else return resolve();
           });
         });
-      });
-    });
+      })
+
+    })
   }
 
-  computeContentType(filename) {
+  computeContentType (filename) {
     const parts = filename.split('.');
     console.log(filename.split('.')[parts.length - 1]);
     switch (filename.split('.')[parts.length - 1]) {
@@ -234,4 +248,4 @@ module.exports = class DeploymentTools {
 
     return this.callback(null, response);
   }
-};
+}
