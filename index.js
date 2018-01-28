@@ -15,6 +15,7 @@ module.exports = class DeploymentTools {
     this.event = event;
     this.callback = callback;
     this.bucketName = bucketName;
+    this.files = [];
 
     let replacePath = typeof path === 'string' ? path : '';
     console.log('Event body: ', event.body);
