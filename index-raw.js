@@ -125,23 +125,27 @@ module.exports = class DeploymentTools {
       }
     }
 
-    const requestCallback = (error, response, body) => {
-      if (error) {
-        this.callback(error, `Fetching the branch lists from: ${this.repo} failed.`);
-      }
-
-      switch (type) {
-        case 'get deployed':
-          const branchObj = JSON.parse(body).filter(item => item.commit.sha === this.lastCommit);
-          console.log(branchObj);
-          return branchObj.name;
-        default:
-          return body;
-      }
-    }
-
     return new Promise((resolve, reject) => {
-      request
+      const requestCallback = (error, response, body) => {
+        if (error) {
+          this.callback(error, `Fetching the branch lists from: ${this.repo} failed.`);
+        }
+
+        let result = null;
+
+        switch (type) {
+          case 'get deployed':
+            const branchObj = JSON.parse(body).filter(item => item.commit.sha === this.lastCommit);
+            result = branchObj.name;
+            break;
+          default:
+            result = body;
+        }
+
+        return resolve(result);
+      }
+
+      return request
       .get(target, requestCallback)
       .auth(null, null, true, this.gitAPIkey)
       .on('response', function(response) {
@@ -168,7 +172,8 @@ module.exports = class DeploymentTools {
 
       const requestCallback = (error, response, body) => {
         if (error) {
-          this.callback(error, `Fetching the resources from: ${downloadsUrl} failed.`);
+          this.callback(error,
+            `Fetching the resources from: ${downloadsUrl} failed.`);
         }
 
         const bodyObj = JSON.parse(body);
@@ -176,20 +181,19 @@ module.exports = class DeploymentTools {
 
         bodyObj.forEach((fileObject, index) => {
           this.files.push(fileObject);
-
-          if (index === bodyObj.length - 1) {
-            resolve(index);
-          }
         });
+
+        console.log('Files', this.files);
+
+        return resolve(this.files.length);
       }
 
-      request
-      .get(target, requestCallback)
-      .auth(null, null, true, this.gitAPIkey)
-      .on('response', function(response) {
-        console.log(response.statusCode) // 200
-        console.log(response.headers['content-type']) // 'image/png'
-      })
+      return request.get(target, requestCallback).
+        auth(null, null, true, this.gitAPIkey).
+        on('response', function (response) {
+          console.log(response.statusCode) // 200
+          console.log(response.headers['content-type']) // 'image/png'
+        })
 
     });
   }
