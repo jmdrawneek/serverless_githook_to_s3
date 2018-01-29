@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const request = require('request');
 const AWS = require('aws-sdk');
 const fs = require('fs');
+const zlib = require('zlib');
 
 module.exports = class DeploymentTools {
   constructor (credentials, event, callback, bucketName, gitHookKey, gitAPIkey, path) {
@@ -203,10 +204,13 @@ module.exports = class DeploymentTools {
   }
 
   putFilesOnS3() {
+    const gzip = zlib.createGzip();
+
     return new Promise((resolve, reject) => {
       // fileObject, folder
       this.files.forEach((fileObject, index) => {
         request(fileObject.download_url)
+        .pipe(gzip)
         .pipe(fs.createWriteStream(`/tmp/${fileObject.name}`))
         .on('finish', () => {
           this.s3.upload({
