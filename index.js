@@ -163,7 +163,8 @@ module.exports = class DeploymentTools {
    * @returns {Promise<any>}
    */
   getFilesFromGit(branchName) {
-    const downloadsUrl = typeof branchName === 'undefined' ? this.uri : this.uri + '?ref=' + branchName;
+    // const downloadsUrl = typeof branchName === 'undefined' ? this.uri : this.uri + '?ref=' + branchName;
+    const downloadsUrl = this.uri;
     const target = {
       uri: downloadsUrl,
       headers: {
@@ -178,7 +179,7 @@ module.exports = class DeploymentTools {
         }
 
         const bodyObj = JSON.parse(body);
-        console.log(bodyObj);
+        console.log('File response body: ', bodyObj);
 
         bodyObj.forEach((fileObject, index) => {
           this.files.push(fileObject);
