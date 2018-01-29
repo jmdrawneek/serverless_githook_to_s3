@@ -12,6 +12,7 @@ module.exports = class DeploymentTools {
     this.callback = callback;
     this.bucketName = bucketName;
     this.files = [];
+    this.tag = event.body.ref.split('/')[2];
 
     let replacePath = (typeof path === 'string') ? path : '';
     console.log('Event body: ', event.body);
@@ -210,7 +211,7 @@ module.exports = class DeploymentTools {
         .on('finish', () => {
           this.s3.upload({
             Bucket: this.bucketName,
-            Key: fileObject.path,
+            Key: this.tag.replace('.', '-') + '/' + fileObject.name,
             Body: fs.createReadStream(`/tmp/${fileObject.name}`),
             ACL: 'public-read',
             CacheControl: 'max-age=31536000',
