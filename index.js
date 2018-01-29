@@ -6,6 +6,7 @@
 const crypto = require('crypto');
 const request = require('request');
 const AWS = require('aws-sdk');
+const fs = require('fs');
 
 module.exports = class DeploymentTools {
   constructor(credentials, event, callback, bucketName, gitHookKey, gitAPIkey, path) {
@@ -130,8 +131,6 @@ module.exports = class DeploymentTools {
       }
     };
 
-    console.log(target.url);
-
     return new Promise((resolve, reject) => {
       const requestCallback = (error, response, body) => {
         if (error) {
@@ -155,7 +154,6 @@ module.exports = class DeploymentTools {
       return request.get(target, requestCallback).auth(null, null, true, this.gitAPIkey).on('response', function (response) {
         console.log(response.statusCode);
         console.log(response.headers['content-type']);
-        console.log(response.body);
       });
     });
   }
@@ -174,8 +172,8 @@ module.exports = class DeploymentTools {
         'User-Agent': 'AWS Lambda Function' // Without that Github will reject all requests
       }
     };
-    return new Promise((resolve, reject) => {
 
+    return new Promise((resolve, reject) => {
       const requestCallback = (error, response, body) => {
         if (error) {
           this.callback(error, `Fetching the resources from: ${downloadsUrl} failed.`);
@@ -195,7 +193,7 @@ module.exports = class DeploymentTools {
 
       return request.get(target, requestCallback).auth(null, null, true, this.gitAPIkey).on('response', function (response) {
         console.log(response.statusCode); // 200
-        console.log(response.headers['content-type']); // 'image/png'
+        console.log(response.headers['content-type']);
       });
     });
   }
@@ -204,10 +202,10 @@ module.exports = class DeploymentTools {
     return new Promise((resolve, reject) => {
       // fileObject, folder
       this.files.forEach((fileObject, index) => {
-        request(fileObject.download_url).pipe(fs.createWriteStream(`/tmp/${fileObject.name}`)).on('finish', () => {
+        request(fileObject.download_ur).pipe(fs.createWriteStream(`/tmp/${fileObject.name}`)).on('finish', () => {
           this.s3.upload({
-            Bucket: bucketName,
-            Key: folder + fileObject.name,
+            Bucket: this.bucketName,
+            Key: fileObject.path,
             Body: fs.createReadStream(`/tmp/${fileObject.name}`),
             ACL: 'public-read',
             CacheControl: 'max-age=31536000',
