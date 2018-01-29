@@ -5,19 +5,37 @@ exports.handler = async (event, context, callback) => {
   const gitHookKey = process.env.GITHUB_WEBHOOK_SECRET;
   const gitAPIkey = process.env.GITHUB_API_TOKEN;
 
-  const deploymentTools = new DeploymentTools(null, event, callback, bucketName, gitHookKey, gitAPIkey, 'docs');
+  const allowedPrefixes = ['beta-'];
 
-  // Process incoming gitHook event.
-  if(deploymentTools.processIncommingGitHook()) {
+  const releaseRef = JSON.parse(event.Records[0].Sns.Message).ref.split('/');
+  if (releaseRef[1] === 'tags' && checkPrefix(releaseRef[2])) {
 
-      console.log(`${files} added ready for deployment`);
+    const deploymentTools = new DeploymentTools(null, event, callback, bucketName, gitHookKey, gitAPIkey, 'dist');
 
+    // Process incoming gitHook event.
+    if (deploymentTools.processIncommingGitHook()) {
       const branchName = await deploymentTools.listGitRepoBranches('get deployed');
-
       await deploymentTools.getFilesFromGit(branchName);
-
       await deploymentTools.putFilesOnS3();
 
       deploymentTools.closeTask();
+    }
+  }
+  else {
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify({
+        input: this.event
+      })
+    };
+
+    return callback(null, response);
+  }
+
+  function checkPrefix(tag) {
+    let result = false;
+    allowedPrefixes.forEach((allowed) => {
+      if (!result) result = tag.startsWith(allowed);
+    })
   }
 };
