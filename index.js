@@ -21,7 +21,6 @@ module.exports = class DeploymentTools {
     this.tag = event.body.ref.split('/')[2];
 
     let replacePath = typeof path === 'string' ? path : '';
-    console.log('Event body: ', event.body);
 
     this.uri = event.body.repository.contents_url.replace('{+path}', replacePath);
     this.lastCommit = event.body.head_commit.id;
@@ -35,6 +34,8 @@ module.exports = class DeploymentTools {
         Bucket: bucketName
       }
     });
+
+    console.log('Completed setting up object.');
   }
 
   /**
@@ -43,6 +44,7 @@ module.exports = class DeploymentTools {
    * @returns {Promise}
    */
   processIncommingGitHook() {
+    console.log('Processing Incoming githook.');
     let errMsg = null;
     const headers = this.event.headers;
     const sig = headers['X-Hub-Signature'];
@@ -124,7 +126,13 @@ module.exports = class DeploymentTools {
     return "sha1=" + hmac.digest("hex");
   }
 
+  /**
+   *
+   * @param type
+   * @returns {Promise<any>}
+   */
   listGitRepoBranches(type) {
+    console.log('Listing branches for gitrepo.');
 
     const target = {
       uri: `https://api.github.com/repos/${this.owner}/${this.repo}/branches`,
@@ -166,6 +174,7 @@ module.exports = class DeploymentTools {
    * @returns {Promise<any>}
    */
   getFilesFromGit(branchName) {
+    console.log('Getting files from branch ' + branchName);
     const downloadsUrl = typeof branchName === 'undefined' ? this.uri : this.uri + '?ref=' + branchName;
     const target = {
       uri: downloadsUrl,
@@ -199,7 +208,12 @@ module.exports = class DeploymentTools {
     });
   }
 
+  /**
+   *
+   * @returns {Promise<any>}
+   */
   putFilesOnS3() {
+    console.log('Putting files on S3.');
     return new Promise((resolve, reject) => {
       // fileObject, folder
       this.files.forEach((fileObject, index) => {
@@ -222,6 +236,11 @@ module.exports = class DeploymentTools {
     });
   }
 
+  /**
+   *
+   * @param filename
+   * @returns {string}
+   */
   computeContentType(filename) {
     const parts = filename.split('.');
     console.log(filename.split('.')[parts.length - 1]);
@@ -243,6 +262,10 @@ module.exports = class DeploymentTools {
     }
   }
 
+  /**
+   *
+   * @returns {*}
+   */
   closeTask() {
     const response = {
       statusCode: 200,
