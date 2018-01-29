@@ -164,8 +164,7 @@ module.exports = class DeploymentTools {
    * @returns {Promise<any>}
    */
   getFilesFromGit(branchName) {
-    // const downloadsUrl = typeof branchName === 'undefined' ? this.uri : this.uri + '?ref=' + branchName;
-    const downloadsUrl = this.uri;
+    const downloadsUrl = typeof branchName === 'undefined' ? this.uri : this.uri + '?ref=' + branchName;
     const target = {
       uri: downloadsUrl,
       headers: {
@@ -202,7 +201,7 @@ module.exports = class DeploymentTools {
     return new Promise((resolve, reject) => {
       // fileObject, folder
       this.files.forEach((fileObject, index) => {
-        request(fileObject.download_ur).pipe(fs.createWriteStream(`/tmp/${fileObject.name}`)).on('finish', () => {
+        request(fileObject.download_url).pipe(fs.createWriteStream(`/tmp/${fileObject.name}`)).on('finish', () => {
           this.s3.upload({
             Bucket: this.bucketName,
             Key: fileObject.path,
