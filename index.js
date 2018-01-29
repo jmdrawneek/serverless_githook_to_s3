@@ -130,6 +130,8 @@ module.exports = class DeploymentTools {
       }
     };
 
+    console.log(target.url);
+
     return new Promise((resolve, reject) => {
       const requestCallback = (error, response, body) => {
         if (error) {
@@ -151,8 +153,9 @@ module.exports = class DeploymentTools {
       };
 
       return request.get(target, requestCallback).auth(null, null, true, this.gitAPIkey).on('response', function (response) {
-        console.log(response.statusCode); // 200
-        console.log(response.headers['content-type']); // 'image/png'
+        console.log(response.statusCode);
+        console.log(response.headers['content-type']);
+        console.log(response.body);
       });
     });
   }
