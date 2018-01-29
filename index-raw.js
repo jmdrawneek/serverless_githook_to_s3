@@ -137,7 +137,7 @@ module.exports = class DeploymentTools {
         switch (type) {
           case 'get deployed':
             const branchObj = JSON.parse(body).filter(item => item.commit.sha === this.lastCommit);
-            result = branchObj.name;
+            result = branchObj[0].name;
             break;
           default:
             result = body;
