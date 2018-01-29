@@ -204,11 +204,10 @@ module.exports = class DeploymentTools {
   }
 
   putFilesOnS3() {
-    const gzip = zlib.createGzip();
-
     return new Promise((resolve, reject) => {
       // fileObject, folder
       this.files.forEach((fileObject, index) => {
+        const gzip = zlib.createGzip();
         request(fileObject.download_url)
         .pipe(gzip)
         .pipe(fs.createWriteStream(`/tmp/${fileObject.name}`))
