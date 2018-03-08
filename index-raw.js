@@ -14,6 +14,7 @@ module.exports = class DeploymentTools {
     this.bucketName = bucketName;
     this.files = [];
     this.tag = event.body.ref.split('/')[2];
+    this.releaseFolder = this.tag.contains('rc-') ? this.tag.split('-')[1] : this.tag;
 
     let replacePath = (typeof path === 'string') ? path : '';
 
@@ -227,7 +228,7 @@ module.exports = class DeploymentTools {
         .on('finish', () => {
           this.s3.upload({
             Bucket: this.bucketName,
-            Key: this.tag.replace(/\./g, '-') + '/' + fileObject.name,
+            Key: this.releaseFolder + '/' + fileObject.name,
             Body: fs.createReadStream(`/tmp/${fileObject.name}`),
             ACL: 'public-read',
             CacheControl: 'max-age=31536000',

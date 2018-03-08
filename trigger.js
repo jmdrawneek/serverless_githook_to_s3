@@ -7,7 +7,7 @@ exports.handler = async (event, context, callback) => {
 
   const allowedPrefixes = ['beta-'];
 
-  const releaseRef = JSON.parse(event.Records[0].Sns.Message).ref.split('/');
+  const releaseRef = event.body.ref.split('/');
   if (releaseRef[1] === 'tags' && checkPrefix(releaseRef[2])) {
 
     const deploymentTools = new DeploymentTools(null, event, callback, bucketName, gitHookKey, gitAPIkey, 'dist');
