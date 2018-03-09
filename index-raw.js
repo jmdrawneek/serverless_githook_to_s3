@@ -228,7 +228,7 @@ module.exports = class DeploymentTools {
         .on('finish', () => {
           this.s3.upload({
             Bucket: this.bucketName,
-            Key: this.releaseFolder + '/' + fileObject.name,
+            Key: this.releaseFolder.replace('.', '-') + '/' + fileObject.name,
             Body: fs.createReadStream(`/tmp/${fileObject.name}`),
             ACL: 'public-read',
             CacheControl: 'max-age=31536000',
