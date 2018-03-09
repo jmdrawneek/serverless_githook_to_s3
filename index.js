@@ -222,7 +222,7 @@ module.exports = class DeploymentTools {
         request(fileObject.download_url).pipe(gzip).pipe(fs.createWriteStream(`/tmp/${fileObject.name}`)).on('finish', () => {
           this.s3.upload({
             Bucket: this.bucketName,
-            Key: this.releaseFolder.replace('.', '-') + '/' + fileObject.name,
+            Key: this.releaseFolder.replace(/./g, '-') + '/' + fileObject.name,
             Body: fs.createReadStream(`/tmp/${fileObject.name}`),
             ACL: 'public-read',
             CacheControl: 'max-age=31536000',
