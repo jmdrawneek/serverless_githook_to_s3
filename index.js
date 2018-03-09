@@ -19,7 +19,7 @@ module.exports = class DeploymentTools {
     this.bucketName = bucketName;
     this.files = [];
     this.tag = event.body.ref.split('/')[2];
-    this.releaseFolder = this.tag.contains('rc-') ? this.tag.split('-')[1] : this.tag;
+    this.releaseFolder = this.tag.indexOf('rc-') === 1 ? this.tag.split('-')[1] : this.tag;
 
     let replacePath = typeof path === 'string' ? path : '';
 
