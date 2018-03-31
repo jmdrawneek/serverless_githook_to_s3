@@ -13,7 +13,7 @@ module.exports = class DeploymentTools {
     this.callback = callback;
     this.bucketName = bucketName;
     this.files = [];
-    this.tag = event.body.ref;
+    this.tag = event.body.ref.split('/')[2];
     this.releaseFolder = String(this.tag.indexOf('rc-') === 0 ? this.tag.split('-')[1] : this.tag).replace(/\./g, '-');
 
     let replacePath = (typeof path === 'string') ? path : '';
