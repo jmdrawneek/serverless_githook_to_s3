@@ -155,6 +155,7 @@ module.exports = class DeploymentTools {
             console.log('debug branches: ', body);
             const branchObj = JSON.parse(body).filter(item => item.commit.sha === this.lastCommit);
             console.log('debug branch: ', branchObj);
+            console.log('Looking for commit: ', this.lastCommit);
             result = branchObj[0].name;
             break;
           default:
