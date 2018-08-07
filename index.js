@@ -136,7 +136,7 @@ module.exports = class DeploymentTools {
     console.log('Listing branches for gitrepo.');
 
     const target = {
-      uri: `https://api.github.com/repos/${this.owner}/${this.repo}/branches`,
+      uri: `https://api.github.com/repos/${this.owner}/${this.repo}/branches?per_page=100`,
       headers: {
         'User-Agent': 'AWS Lambda Function' // Without that Github will reject all requests
       }
