@@ -220,7 +220,7 @@ module.exports = class DeploymentTools {
    * @returns {Promise<any>}
    */
   putFilesOnS3() {
-    console.log('Putting files on S3.');
+    console.log('Putting files on S3 in' + this.releaseFolder);
     return new Promise((resolve, reject) => {
       // fileObject, folder
       this.files.forEach((fileObject, index) => {
