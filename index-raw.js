@@ -138,7 +138,7 @@ module.exports = class DeploymentTools {
       headers: {
         'User-Agent': 'AWS Lambda Function' // Without that Github will reject all requests
       }
-    }
+    };
 
     return new Promise((resolve, reject) => {
       const requestCallback = (error, response, body) => {
@@ -161,7 +161,7 @@ module.exports = class DeploymentTools {
         }
 
         return resolve(result);
-      }
+      };
 
       return request
       .get(target, requestCallback)
@@ -186,7 +186,7 @@ module.exports = class DeploymentTools {
       headers: {
         'User-Agent': 'AWS Lambda Function' // Without that Github will reject all requests
       }
-    }
+    };
 
     return new Promise((resolve, reject) => {
       const requestCallback = (error, response, body) => {
@@ -205,7 +205,7 @@ module.exports = class DeploymentTools {
         console.log('Files', this.files);
 
         return resolve(this.files.length);
-      }
+      };
 
       return request
       .get(target, requestCallback)
@@ -291,4 +291,4 @@ module.exports = class DeploymentTools {
 
     return this.callback(null, response);
   }
-}
+};
