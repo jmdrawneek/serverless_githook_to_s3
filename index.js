@@ -20,7 +20,7 @@ module.exports = class DeploymentTools {
     this.files = [];
     this.tag = event.body.ref.split('/')[2];
     const refParts = event.body.ref.split('/');
-    this.releaseFolder = refParts[refParts.length - 1].replace(/\./g, '-');
+    this.releaseFolder = refParts[refParts.length - 1].replace(/\./g, '-').replace(/^rc-/g, '');
     console.log('The release folder will be', this.releaseFolder);
 
     let replacePath = typeof path === 'string' ? path : '';
