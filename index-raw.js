@@ -14,12 +14,15 @@ module.exports = class DeploymentTools {
     this.bucketName = bucketName;
     this.files = [];
     this.tag = event.body.ref.split('/')[2];
-    this.releaseFolder = String(this.tag.indexOf('rc-') === 0 ? this.tag.split('-')[1] : this.tag).replace(/\./g, '-');
+    const refParts = event.body.ref.split('/');
+    this.releaseFolder = refParts[refParts.length - 1].replace(/\./g, '-');
+    console.log('The release folder will be', this.releaseFolder);
 
     let replacePath = (typeof path === 'string') ? path : '';
 
     this.uri = event.body.repository.contents_url.replace('{+path}', replacePath);
-    this.lastCommit = event.body.head_commit.id;
+    // If there is no head commit, use the previous commit.
+    this.lastCommit = event.body.head_commit.id || event.body.before;
 
     this.owner = event.body.repository.full_name.split('/')[0];
     this.repo = event.body.repository.full_name.split('/')[1];
