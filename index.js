@@ -238,6 +238,8 @@ module.exports = class DeploymentTools {
               throw new Error('Error connecting to s3 bucket. ' + error);
             } else return resolve();
           });
+        }).on('error', function (err) {
+          console.log('Failed to put files on s3 ', err);
         });
       });
     });

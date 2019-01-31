@@ -245,7 +245,10 @@ module.exports = class DeploymentTools {
             }
             else return resolve();
           });
-        });
+        })
+          .on('error', function(err) {
+            console.log('Failed to put files on s3 ', err)
+          })
       })
 
     })
