@@ -232,6 +232,7 @@ module.exports = class DeploymentTools {
         .pipe(gzip)
         .pipe(fs.createWriteStream(`/tmp/${fileObject.name}`))
         .on('finish', () => {
+          console.log('Got files, not putting on S3');
           this.s3.upload({
             Bucket: this.bucketName,
             Key: this.releaseFolder + '/' + fileObject.name,
@@ -243,7 +244,10 @@ module.exports = class DeploymentTools {
             if (error) {
               throw new Error('Error connecting to s3 bucket. ' + error);
             }
-            else return resolve();
+            else {
+              console.log('Successfully put files on s3');
+              return resolve();
+            }
           });
         })
           .on('error', function(err) {

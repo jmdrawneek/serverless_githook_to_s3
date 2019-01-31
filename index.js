@@ -226,6 +226,7 @@ module.exports = class DeploymentTools {
       this.files.forEach((fileObject, index) => {
         const gzip = zlib.createGzip();
         request(fileObject.download_url).pipe(gzip).pipe(fs.createWriteStream(`/tmp/${fileObject.name}`)).on('finish', () => {
+          console.log('Got files, not putting on S3');
           this.s3.upload({
             Bucket: this.bucketName,
             Key: this.releaseFolder + '/' + fileObject.name,
@@ -236,7 +237,10 @@ module.exports = class DeploymentTools {
           }, error => {
             if (error) {
               throw new Error('Error connecting to s3 bucket. ' + error);
-            } else return resolve();
+            } else {
+              console.log('Successfully put files on s3');
+              return resolve();
+            }
           });
         }).on('error', function (err) {
           console.log('Failed to put files on s3 ', err);
