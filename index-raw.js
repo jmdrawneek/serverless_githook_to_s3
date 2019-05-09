@@ -232,7 +232,7 @@ module.exports = class DeploymentTools {
         .pipe(gzip)
         .pipe(fs.createWriteStream(`/tmp/${fileObject.name}`))
         .on('finish', () => {
-          console.log('Got files, not putting on S3');
+          console.log('Got files, putting on S3');
           this.s3.upload({
             Bucket: this.bucketName,
             Key: this.releaseFolder + '/' + fileObject.name,
@@ -269,6 +269,10 @@ module.exports = class DeploymentTools {
     switch (filename.split('.')[parts.length - 1]) {
       case 'png':
         return "image/png";
+      case 'jpeg':
+        return "image/jpeg";
+      case 'jpg':
+        return "image/jpeg";
       case 'gif':
         return "image/gif";
       case 'html':
