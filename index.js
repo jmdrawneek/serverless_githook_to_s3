@@ -218,13 +218,13 @@ module.exports = class DeploymentTools {
    * @returns {Array<Promise>}
    */
   putFilesOnS3() {
-    console.log('Putting files on S3 in' + this.releaseFolder);
-    let uploads = [];
-      // fileObject, folder
-      this.files.forEach((fileObject, index) => {
-        uploads.push(new Promise((resolve, reject) => {
+    console.log(`Putting ${this.files.length} files on S3 in` + this.releaseFolder);
 
-          request(fileObject.download_url).pipe(fs.createWriteStream(`/tmp/${fileObject.name}`)).on('finish', () => {
+    return this.files.map((fileObject, index) => {
+        return new Promise((resolve, reject) => {
+          request(fileObject.download_url)
+            .pipe(fs.createWriteStream(`/tmp/${fileObject.name}`))
+            .on('finish', () => {
           this.s3.upload({
             Bucket: this.bucketName,
             Key: this.releaseFolder + '/' + fileObject.name,
@@ -237,15 +237,13 @@ module.exports = class DeploymentTools {
               throw new Error('Error connecting to s3 bucket. ' + error);
             } else return resolve();
           });
-        }).on('error', function (err) {
+        })
+            .on('error', function (err) {
           console.log('Failed to put files on s3 ', err);
-            throw new Error('Error connecting to s3 bucket. ' + error);
+            throw new Error('Error connecting to s3 bucket. ' + err);
         });
-      })
-        );
+      });
     });
-
-      return uploads;
   }
 
   /**
