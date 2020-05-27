@@ -206,7 +206,9 @@ module.exports = class DeploymentTools {
         return resolve(this.files.length);
       };
 
-      return request.get(target, requestCallback).auth(null, null, true, this.gitAPIkey).on('response', function (response) {
+      return request.get(target, requestCallback)
+        .auth(null, null, true, this.gitAPIkey)
+        .on('response', function (response) {
         console.log(response.statusCode); // 200
         console.log(response.headers['content-type']);
       });
@@ -218,9 +220,9 @@ module.exports = class DeploymentTools {
    * @returns {Array<Promise>}
    */
   putFilesOnS3() {
-    console.log(`Putting ${this.files.length} files on S3 in` + this.releaseFolder);
+    console.log(`Putting ${this.files.length} files on S3 in ` + this.releaseFolder);
 
-    return this.files.map((fileObject, index) => {
+    return Promise.all(this.files.map((fileObject, index) => {
         return new Promise((resolve, reject) => {
           request(fileObject.download_url)
             .pipe(fs.createWriteStream(`/tmp/${fileObject.name}`))
@@ -235,7 +237,11 @@ module.exports = class DeploymentTools {
           }, error => {
             if (error) {
               throw new Error('Error connecting to s3 bucket. ' + error);
-            } else return resolve();
+            }
+            else {
+              console.log('Completed sending: ' + this.releaseFolder + '/' + fileObject.name)
+              return resolve();
+            };
           });
         })
             .on('error', function (err) {
@@ -243,7 +249,7 @@ module.exports = class DeploymentTools {
             throw new Error('Error connecting to s3 bucket. ' + err);
         });
       });
-    });
+    }));
   }
 
   /**
